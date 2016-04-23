@@ -77,6 +77,8 @@ class Hydra : ISlack
     /**
      * Handle a message event
      *
+     * Checks for command messages of the format ":hydra [COMMAND]"
+     *
      * Params:
      *      event = The event JSON
      */
@@ -84,11 +86,28 @@ class Hydra : ISlack
     private void handleMessage ( Json event )
     {
         import std.algorithm;
+        import std.format;
+        import std.string;
 
-        // Reply if someone said hydra
-        if ( event["text"].get!string.canFind("hydra") )
+        auto text = event["text"].get!string;
+        auto splitted = text.split(' ');
+
+        if ( splitted.length > 1 && splitted[0] == ":hydra" )
         {
-            this.replyWith(event, "Ph'nglui mglw'nafh Cthulhu R'lyeh wgah'nagl fhtagn");
+            switch ( splitted[1] )
+            {
+                case "users":
+                    this.replyWith(event, format("Users in this slack: %s", this.users.names()));
+                    break;
+
+                case "channels":
+                    this.replyWith(event, format("Channels in this slack: %s", this.channels.names()));
+                    break;
+
+                default:
+                    logInfo("Unknown command: %s", splitted[1]);
+                    break;
+            }
         }
     }
 
