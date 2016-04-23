@@ -10,7 +10,7 @@ import util.meta.ListSearch;
  * Wrapper struct for a list of channels
  */
 
-alias Channels = ListSearch!(Channel, "name");
+alias Channels = ListSearch!(Channel, "id", "name");
 
 /**
  * Channel struct

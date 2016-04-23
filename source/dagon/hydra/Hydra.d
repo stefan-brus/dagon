@@ -14,20 +14,36 @@ class Hydra : ISlack
 {
     import dagon.hydra.record.Channel;
     import dagon.hydra.record.User;
+    import dagon.hydra.Commands;
 
     import vibe.d;
 
     /**
-     * The channel list
+     * Shared data aggregate
      */
 
-    private Channels channels;
+    static class SharedData
+    {
+        /**
+         * The channel list
+         */
+
+        Channels channels;
+
+        /**
+         * The user list
+         */
+
+        Users users;
+    }
+
+    private SharedData data;
 
     /**
-     * The user list
+     * The commands
      */
 
-    private Users users;
+    private Commands commands;
 
     /**
      * Constructor
@@ -39,6 +55,9 @@ class Hydra : ISlack
     this ( string token )
     {
         super(token);
+
+        this.data = new SharedData();
+        this.commands = new Commands(this.data);
     }
 
     /**
@@ -67,11 +86,11 @@ class Hydra : ISlack
 
     override protected void onConnect ( )
     {
-        this.channels = this.getList!Channel("channels.list", "channels");
-        logInfo("Channels: %s", this.channels.names());
+        this.data.channels = this.getList!Channel("channels.list", "channels");
+        logInfo("Channels: %s", this.data.channels.names());
 
-        this.users = this.getList!User("users.list", "members");
-        logInfo("Users: %s", this.users.names());
+        this.data.users = this.getList!User("users.list", "members");
+        logInfo("Users: %s", this.data.users.names());
     }
 
     /**
@@ -85,8 +104,6 @@ class Hydra : ISlack
 
     private void handleMessage ( Json event )
     {
-        import std.algorithm;
-        import std.format;
         import std.string;
 
         auto text = event["text"].get!string;
@@ -94,19 +111,15 @@ class Hydra : ISlack
 
         if ( splitted.length > 1 && splitted[0] == ":hydra" )
         {
-            switch ( splitted[1] )
+            auto result = this.commands.run(splitted[1], splitted.length == 2 ? null : splitted[2 .. $]);
+
+            if ( result !is null )
             {
-                case "users":
-                    this.replyWith(event, format("Users in this slack: %s", this.users.names()));
-                    break;
-
-                case "channels":
-                    this.replyWith(event, format("Channels in this slack: %s", this.channels.names()));
-                    break;
-
-                default:
-                    logInfo("Unknown command: %s", splitted[1]);
-                    break;
+                this.replyWith(event, result);
+            }
+            else
+            {
+                logInfo("Unknown command: %s", splitted[1]);
             }
         }
     }

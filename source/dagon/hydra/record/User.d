@@ -10,7 +10,7 @@ import util.meta.ListSearch;
  * Wrapper struct for a list of users
  */
 
-alias Users = ListSearch!(User, "name");
+alias Users = ListSearch!(User, "id", "name");
 
 /**
  * User struct

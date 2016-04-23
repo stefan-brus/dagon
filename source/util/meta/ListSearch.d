@@ -10,10 +10,11 @@ module util.meta.ListSearch;
  *
  * Template_params:
  *      T = The type of aggregate to wrap
+ *      KeyField = The field to use as key for the index operator
  *      Fields = The fields to add lookups for
  */
 
-struct ListSearch ( T, Fields ... )
+struct ListSearch ( T, string KeyField, Fields ... )
 {
     static assert(is(T == struct));
 
@@ -26,6 +27,8 @@ struct ListSearch ( T, Fields ... )
     alias list this;
 
     mixin LookupMethods!(Fields);
+
+    mixin(genOpIndex());
 
     /**
      * Helper template to generate the lookup methods
@@ -74,6 +77,28 @@ struct ListSearch ( T, Fields ... )
     }
 
     /**
+     * Generate the opIndex method
+     */
+
+    private static string genOpIndex ( ) ( )
+    {
+        enum ParamTypeStr = typeNameOfField!(KeyField);
+        return "T* opIndex ( " ~ ParamTypeStr ~ ` key )
+{
+    foreach ( ref elem; this )
+    {
+        if ( elem.` ~ KeyField ~ ` == key )
+        {
+            return &elem;
+        }
+    }
+
+    return null;
+}
+`;
+    }
+
+    /**
      * Helper function to get the type name of a field in the aggregate
      *
      * Template_params:
@@ -94,4 +119,23 @@ struct ListSearch ( T, Fields ... )
 
         assert(false);
     }
+}
+
+unittest
+{
+    struct Entry
+    {
+        uint id;
+        string text;
+    }
+
+    alias Entries = ListSearch!(Entry, "id");
+
+    Entries entries;
+    entries ~= Entry(42, "So long and thanks for all the fish");
+    entries ~= Entry(666, "The bringer of light");
+
+    assert(entries.ids == [42, 666]);
+    assert(entries[42].text == "So long and thanks for all the fish");
+    assert(entries[666].text == "The bringer of light");
 }
