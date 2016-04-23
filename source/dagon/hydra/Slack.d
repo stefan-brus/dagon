@@ -54,7 +54,7 @@ class Slack
      * Connect to the slack real time messaging API
      */
 
-    public void connect ( )
+    void connect ( )
     {
         string ws_url;
         auto auth_url = "https://slack.com/api/rtm.start?token=" ~ this.token;
@@ -91,7 +91,7 @@ class Slack
      * Handle slack events
      */
 
-    public void handleEvents ( )
+    void handleEvents ( )
     in
     {
         assert(this.ws !is null && this.ws.connected);

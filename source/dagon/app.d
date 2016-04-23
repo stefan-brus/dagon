@@ -8,6 +8,7 @@ import std.stdio;
 
 shared static this ( )
 {
+    setLogFormat(FileLogger.Format.threadTime, FileLogger.Format.threadTime);
     logInfo("Setting up slack websocket connection");
     auto token = File(".slacktoken").readln().chomp();
     auto slack = new Slack(token);
