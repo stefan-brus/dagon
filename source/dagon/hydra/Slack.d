@@ -29,6 +29,12 @@ class Slack
     private WebSocket ws;
 
     /**
+     * The current message id
+     */
+
+    private ulong msg_id;
+
+    /**
      * Constructor
      *
      * Params:
@@ -38,6 +44,10 @@ class Slack
     this ( string token )
     {
         this.token = token;
+        this.msg_id = 1;
+
+        enum PING_INTERVAL = 5;
+        setTimer(PING_INTERVAL.seconds, &this.ping, true);
     }
 
     /**
@@ -49,6 +59,7 @@ class Slack
         string ws_url;
         auto auth_url = "https://slack.com/api/rtm.start?token=" ~ this.token;
 
+        // Get the websocket URL
         requestHTTP(auth_url,
             ( scope req )
             {
@@ -64,10 +75,12 @@ class Slack
             }
         );
 
+        // Set up websocket connection
         this.ws = connectWebSocket(URL(ws_url));
         enforce(this.ws.connected, "Unable to establish websocket connection");
         logInfo("Websocket connection created");
 
+        // Expect a hello message
         auto hello_msg = this.ws.receiveText();
         logInfo("Received message: %s", hello_msg);
         auto hello_json = parseJson(hello_msg);
@@ -102,5 +115,41 @@ class Slack
                 enforce(this.ws.connected, "Unable to re-establish Slack connection");
             }
         }
+    }
+
+    /**
+     * Helper function to send a JSON message
+     *
+     * Handles incrementing of the current message ID and adds it to the JSON
+     *
+     * Params:
+     *      json = The message JSON
+     *
+     * Returns:
+     *      The response
+     */
+
+    private Json sendJson ( Json json )
+    {
+        json["id"] = this.msg_id;
+        this.msg_id++;
+
+        this.ws.send(json.toString());
+
+        return parseJsonString(this.ws.receiveText());
+    }
+
+    /**
+     * Timer delegate to send a ping message if the websocket is connected
+     */
+
+    private void ping ( )
+    {
+        logInfo("Pinging");
+        auto ping_json = Json(["type": Json("ping")]);
+
+        auto response = sendJson(ping_json);
+        enforce(response["type"].get!string == "pong", "Ping was not ponged");
+        logInfo("Ponged");
     }
 }
