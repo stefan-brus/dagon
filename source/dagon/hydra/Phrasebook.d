@@ -5,10 +5,10 @@
 module dagon.hydra.Phrasebook;
 
 /**
- * Phrasebook class
+ * Phrasebook struct
  */
 
-class Phrasebook
+struct Phrasebook
 {
     import markov;
 

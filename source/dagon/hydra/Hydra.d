@@ -64,7 +64,6 @@ class Hydra : ISlack
         super(token);
 
         this.data = new SharedData();
-        this.data.phrasebook = new Phrasebook();
         this.commands = new Commands(this.data);
     }
 
