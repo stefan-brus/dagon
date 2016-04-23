@@ -68,7 +68,7 @@ struct Phrasebook
         foreach ( i; 0 .. len )
         {
             result ~= this.markov_map[user].generate();
-            if ( i != len ) result ~= ' ';
+            if ( i != len && result.length != 0 ) result ~= ' ';
         }
 
         return result;

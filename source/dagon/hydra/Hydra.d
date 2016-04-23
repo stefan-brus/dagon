@@ -120,7 +120,7 @@ class Hydra : ISlack
         {
             auto result = this.commands.run(splitted[1], splitted.length == 2 ? null : splitted[2 .. $]);
 
-            if ( result !is null )
+            if ( result.length > 0 )
             {
                 this.replyWith(event, result);
             }
