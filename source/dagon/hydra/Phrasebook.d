@@ -20,7 +20,9 @@ struct Phrasebook
 
     alias MarkovMap = Chain[string];
 
-    private MarkovMap markov_map;
+    MarkovMap markov_map;
+
+    alias markov_map this;
 
     /**
      * Learn a new phrase

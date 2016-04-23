@@ -20,6 +20,12 @@ class Hydra : ISlack
     import vibe.d;
 
     /**
+     * The path to serialize the phrasebook to disk to
+     */
+
+    private enum PHRASEBOOK_PATH = "phrasebook.json";
+
+    /**
      * Shared data aggregate
      */
 
@@ -88,7 +94,7 @@ class Hydra : ISlack
     }
 
     /**
-     * Get the user list and channel list after connecting
+     * Load necessary data after connecting
      */
 
     override protected void onConnect ( )
@@ -98,6 +104,8 @@ class Hydra : ISlack
 
         this.data.users = this.getList!User("users.list", "members");
         logInfo("Users: %s", this.data.users.names());
+
+        if ( this.loadPhrasebook() ) logInfo("Phrasebook loaded from disk");
     }
 
     /**
@@ -137,6 +145,8 @@ class Hydra : ISlack
             {
                 logInfo("Learning \"%s\" for user %s", text, user.name);
                 this.data.phrasebook.learn(user.name, text);
+                this.writePhrasebook();
+                logInfo("Wrote phrasebook to disk");
             }
         }
     }
@@ -181,5 +191,53 @@ class Hydra : ISlack
         }
 
         return result;
+    }
+
+    /**
+     * Load the phrasebook from disk, if it exists
+     *
+     * Returns:
+     *      True if the phrasebook was loaded, false otherwise
+     */
+
+    private bool loadPhrasebook ( )
+    {
+        import markov.json.decoder;
+
+        import std.file;
+
+        this.data.phrasebook = Phrasebook.init;
+
+        if ( exists(PHRASEBOOK_PATH) )
+        {
+            auto json = parseJsonString(readText(PHRASEBOOK_PATH));
+
+            foreach ( ref string user, ref Json pb_json; json )
+            {
+                this.data.phrasebook[user] = decodeJSON!string(pb_json.toString());
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Write the phrasebook to disk
+     */
+
+    private void writePhrasebook ( )
+    {
+        import markov.json.encoder;
+
+        import std.file;
+
+        auto json = Json.emptyObject;
+
+        foreach ( user, chain; this.data.phrasebook )
+        {
+            json[user] = parseJsonString(encodeJSON!string(chain));
+        }
+
+        write(PHRASEBOOK_PATH, json.toString());
     }
 }

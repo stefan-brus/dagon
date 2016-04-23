@@ -7,3 +7,4 @@ __dummy.html
 *.exe
 dub.selections.json
 .slacktoken*
+phrasebook.json
