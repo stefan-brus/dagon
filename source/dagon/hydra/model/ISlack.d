@@ -4,12 +4,10 @@
 
 module dagon.hydra.model.ISlack;
 
-import vibe.d;
-
-import std.exception;
-
 abstract class ISlack
 {
+    import vibe.d;
+
     /**
      * The auth token
      */
@@ -50,6 +48,8 @@ abstract class ISlack
 
     void connect ( )
     {
+        import std.exception;
+
         // Get the websocket URL
         auto auth_json = this.slackApi("rtm.start");
         enforce(auth_json["ok"].get!bool, format("Error authenticating with slack: %s", auth_json["error"].get!string));
@@ -81,6 +81,8 @@ abstract class ISlack
     }
     body
     {
+        import std.exception;
+
         while ( true )
         {
             try
@@ -167,6 +169,7 @@ abstract class ISlack
             ( scope res )
             {
                 json = res.readJson();
+                enforce(json["ok"].get!bool, "Error in API response");
                 logInfo("%s received response: %s", method, json.toString());
             }
         );
@@ -180,6 +183,8 @@ abstract class ISlack
 
     private void ping ( )
     {
+        import std.exception;
+
         logInfo("Pinging");
         auto ping_json = Json(["type": Json("ping")]);
 
