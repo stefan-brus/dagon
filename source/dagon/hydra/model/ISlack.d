@@ -11,12 +11,6 @@ import std.exception;
 abstract class ISlack
 {
     /**
-     * The authorization URL
-     */
-
-    enum AUTH_URL = "https://slack.com/api/rtm.start";
-
-    /**
      * The auth token
      */
 
@@ -56,24 +50,11 @@ abstract class ISlack
 
     void connect ( )
     {
-        string ws_url;
-        auto auth_url = "https://slack.com/api/rtm.start?token=" ~ this.token;
-
         // Get the websocket URL
-        requestHTTP(auth_url,
-            ( scope req )
-            {
-
-            },
-            ( scope res )
-            {
-                auto json = res.readJson();
-                enforce(json["ok"].get!bool, format("Error authenticating with slack: %s", json["error"].get!string));
-
-                logInfo("Auth OK, websocket URL: %s", json["url"].get!string);
-                ws_url = json["url"].get!string;
-            }
-        );
+        auto auth_json = this.slackApi("rtm.start");
+        enforce(auth_json["ok"].get!bool, format("Error authenticating with slack: %s", auth_json["error"].get!string));
+        logInfo("Auth OK, websocket URL: %s", auth_json["url"].get!string);
+        auto ws_url = auth_json["url"].get!string;
 
         // Set up websocket connection
         this.ws = connectWebSocket(URL(ws_url));
@@ -85,6 +66,8 @@ abstract class ISlack
         logInfo("Received message: %s", hello_msg);
         auto hello_json = parseJson(hello_msg);
         enforce(hello_json["type"].get!string == "hello", "Expected hello message");
+
+        this.onConnect();
     }
 
     /**
@@ -130,6 +113,12 @@ abstract class ISlack
     abstract protected void handleEvent ( Json event );
 
     /**
+     * Override this, do something after connecting to slack
+     */
+
+    abstract protected void onConnect ( );
+
+    /**
      * Helper function to send a JSON message
      *
      * Handles incrementing of the current message ID and adds it to the JSON
@@ -149,6 +138,40 @@ abstract class ISlack
         this.ws.send(json.toString());
 
         return parseJsonString(this.ws.receiveText());
+    }
+
+    /**
+     * Helper function to call the slack API
+     *
+     * Params:
+     *      method = The method to call
+     *
+     * Returns:
+     *      The Json response
+     */
+
+    protected Json slackApi ( string method )
+    {
+        import std.format;
+
+        enum API_URL = "https://slack.com/api/";
+        auto url = format("%s%s?token=%s", API_URL, method, this.token);
+
+        Json json;
+        logInfo("Calling API method %s", method);
+        requestHTTP(url,
+            ( scope req )
+            {
+
+            },
+            ( scope res )
+            {
+                json = res.readJson();
+                logInfo("%s received response: %s", method, json.toString());
+            }
+        );
+
+        return json;
     }
 
     /**

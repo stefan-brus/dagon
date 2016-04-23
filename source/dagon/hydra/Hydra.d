@@ -5,6 +5,7 @@
 module dagon.hydra.Hydra;
 
 import dagon.hydra.model.ISlack;
+import dagon.hydra.record.Channel;
 
 import vibe.d;
 
@@ -14,6 +15,12 @@ import vibe.d;
 
 class Hydra : ISlack
 {
+    /**
+     * The channel list
+     */
+
+    private Channels channels;
+
     /**
      * Constructor
      *
@@ -44,6 +51,15 @@ class Hydra : ISlack
             default:
                 break;
         }
+    }
+
+    /**
+     * Get the user list and channel list after connecting
+     */
+
+    override protected void onConnect ( )
+    {
+        this.getChannelList();
     }
 
     /**
@@ -79,5 +95,23 @@ class Hydra : ISlack
         logInfo("Replying to \"%s\" from %s with \"%s\"", event["text"].get!string, event["channel"].get!string, text);
         auto response = this.sendJson(reply_json);
         enforce(response["ok"].get!bool, "Unable to send reply");
+    }
+
+    /**
+     * Helper function to get the channel list
+     */
+
+    private void getChannelList ( )
+    {
+        this.channels.length = 0;
+
+        auto channels_json = this.slackApi("channels.list")["channels"];
+
+        foreach ( channel_json; channels_json )
+        {
+            this.channels ~= channel_json.deserializeJson!Channel();
+        }
+
+        logInfo("Channels: %s", this.channels.names());
     }
 }
