@@ -1,0 +1,10 @@
+{
+	"name": "dagon",
+	"description": "A simple vibe.d server application.",
+	"copyright": "Copyright © 2015, Stefan",
+	"authors": ["Stefan"],
+	"dependencies": {
+		"vibe-d": "~>0.7.28"
+	},
+	"versions": ["VibeDefaultMain"]
+}
