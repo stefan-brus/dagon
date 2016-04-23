@@ -1,14 +1,14 @@
 /**
- * Slack connection handler
+ * Slack connection handler base class
  */
 
-module dagon.hydra.Slack;
+module dagon.hydra.model.ISlack;
 
 import vibe.d;
 
 import std.exception;
 
-class Slack
+abstract class ISlack
 {
     /**
      * The authorization URL
@@ -104,6 +104,9 @@ class Slack
             {
                 auto event_msg = this.ws.receiveText();
                 logInfo("Received event: %s", event_msg);
+
+                auto event_json = parseJson(event_msg);
+                this.handleEvent(event_json);
             }
             catch ( WebSocketException wse )
             {
@@ -118,6 +121,15 @@ class Slack
     }
 
     /**
+     * Override this, handle a received event JSON
+     *
+     * Params:
+     *      event = The event JSON
+     */
+
+    abstract protected void handleEvent ( Json event );
+
+    /**
      * Helper function to send a JSON message
      *
      * Handles incrementing of the current message ID and adds it to the JSON
@@ -129,7 +141,7 @@ class Slack
      *      The response
      */
 
-    private Json sendJson ( Json json )
+    protected Json sendJson ( Json json )
     {
         json["id"] = this.msg_id;
         this.msg_id++;

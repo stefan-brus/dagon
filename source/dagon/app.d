@@ -1,6 +1,6 @@
 module app;
 
-import dagon.hydra.Slack;
+import dagon.hydra.Hydra;
 
 import vibe.d;
 
@@ -11,8 +11,8 @@ shared static this ( )
     setLogFormat(FileLogger.Format.threadTime, FileLogger.Format.threadTime);
     logInfo("Setting up slack websocket connection");
     auto token = File(".slacktoken").readln().chomp();
-    auto slack = new Slack(token);
-    slack.connect();
+    auto hydra = new Hydra(token);
+    hydra.connect();
 
     auto settings = new HTTPServerSettings;
     settings.port = 666;
@@ -21,7 +21,7 @@ shared static this ( )
 
 	logInfo("Listening for HTTP connections on 127.0.0.1:666");
 
-    slack.handleEvents();
+    hydra.handleEvents();
 }
 
 void hello ( HTTPServerRequest req, HTTPServerResponse res )
