@@ -67,8 +67,11 @@ class Hydra : ISlack
 
     override protected void onConnect ( )
     {
-        this.getChannelList();
-        this.getUserList();
+        this.channels = this.getList!Channel("channels.list", "channels");
+        logInfo("Channels: %s", this.channels.names());
+
+        this.users = this.getList!User("users.list", "members");
+        logInfo("Users: %s", this.users.names());
     }
 
     /**
@@ -107,38 +110,27 @@ class Hydra : ISlack
     }
 
     /**
-     * Helper function to get the channel list
+     * Helper function to get a list from the slack API
+     *
+     * Template_params:
+     *      T = The aggregate type to get as a list
+     *
+     * Params:
+     *      method = The API method
+     *      list_key = The key to the JSON array
      */
 
-    private void getChannelList ( )
+    private T[] getList ( T ) ( string method, string list_key )
     {
-        this.channels.length = 0;
+        T[] result;
 
-        auto channels_json = this.slackApi("channels.list")["channels"];
+        auto json_arr = this.slackApi(method)[list_key];
 
-        foreach ( channel_json; channels_json )
+        foreach ( json; json_arr )
         {
-            this.channels ~= channel_json.deserializeJson!Channel();
+            result ~= json.deserializeJson!T();
         }
 
-        logInfo("Channels: %s", this.channels.names());
-    }
-
-    /**
-     * Helper function to get the user list
-     */
-
-    private void getUserList ( )
-    {
-        this.users.length = 0;
-
-        auto users_json = this.slackApi("users.list")["members"];
-
-        foreach ( user_json; users_json )
-        {
-            this.users ~= user_json.deserializeJson!User();
-        }
-
-        logInfo("Users: %s", this.users.names());
+        return result;
     }
 }
