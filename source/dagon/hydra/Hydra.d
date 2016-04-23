@@ -15,6 +15,7 @@ class Hydra : ISlack
     import dagon.hydra.record.Channel;
     import dagon.hydra.record.User;
     import dagon.hydra.Commands;
+    import dagon.hydra.Phrasebook;
 
     import vibe.d;
 
@@ -35,6 +36,12 @@ class Hydra : ISlack
          */
 
         Users users;
+
+        /**
+         * The phrasebook
+         */
+
+        Phrasebook phrasebook;
     }
 
     private SharedData data;
@@ -57,6 +64,7 @@ class Hydra : ISlack
         super(token);
 
         this.data = new SharedData();
+        this.data.phrasebook = new Phrasebook();
         this.commands = new Commands(this.data);
     }
 
@@ -120,6 +128,16 @@ class Hydra : ISlack
             else
             {
                 logInfo("Unknown command: %s", splitted[1]);
+            }
+        }
+        else
+        {
+            auto user = this.data.users[event["user"].get!string];
+
+            if ( user !is null )
+            {
+                logInfo("Learning \"%s\" for user %s", text, user.name);
+                this.data.phrasebook.learn(user.name, text);
             }
         }
     }

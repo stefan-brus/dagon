@@ -4,7 +4,8 @@
 	"copyright": "Copyright © 2015, Stefan",
 	"authors": ["Stefan"],
 	"dependencies": {
-		"vibe-d": "~>0.7.28"
+		"vibe-d": "~>0.7.28",
+        "markov": "~>1.0.9"
 	},
 	"versions": ["VibeDefaultMain"]
 }

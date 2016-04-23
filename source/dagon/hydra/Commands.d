@@ -44,6 +44,7 @@ class Commands
     string run ( string cmd, string[] args )
     {
         import std.format;
+        import std.random;
 
         switch ( cmd )
         {
@@ -52,6 +53,14 @@ class Commands
 
             case "channels":
                 return format("Channels in this slack: %s", this.data.channels.names());
+
+            case "imitate":
+                if ( args.length == 1 )
+                {
+                    enum PHRASE_MAX_LEN = 20;
+                    return this.data.phrasebook.generate(args[0], uniform(1, PHRASE_MAX_LEN + 1));
+                }
+                break;
 
             default:
                 break;
