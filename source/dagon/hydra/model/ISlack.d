@@ -102,6 +102,10 @@ abstract class ISlack
                 logInfo("Slack connection re-established");
                 enforce(this.ws.connected, "Unable to re-establish Slack connection");
             }
+            catch ( Exception e )
+            {
+                logInfo("Error handling event: %s", e.msg);
+            }
         }
     }
 
